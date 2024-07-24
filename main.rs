@@ -1,14 +1,40 @@
-use std::io::{self, stdin, stdout};
-use std::process::{Command};
+use std::io::{self, Write,stdin, stdout};
+use std::process::{Command,Stdio};
+use std::env;
+use std::path::Path;
 
 fn main(){
-    let mut input = String::new();
-    stdin().read_line(&mut input).unwrap();
+    loop {
+        print!("> ");
+        stdout().flush();
 
-    // read_line leaves a trailing newline, which trim removes
-    let command = input.trim(); 
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap();
 
-    Command::new(command)
-        .spawn()
-        .unwrap();
+        let mut parts = input.trim().split_whitespace();
+        let command = parts.next().unwrap();
+        let args = parts;
+
+        match command {
+            "cd" => {
+                let new_dir = args.peekable().peek().map_or("/", |x| *x);
+                let root = Path::new(new_dir);
+                if let Err(e) = env::set_current_dir(&root) {
+                    eprintln!("{}", e);
+                }
+            },
+            "exit" => return,
+            command => {
+                let child = Command::new(command)
+                    .args(args)
+                    .spawn();
+
+                // gracefully handle malformed user input
+                match child {
+                    Ok(mut child) => { child.wait(); },
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+        }
+    }
 }
