@@ -3,3 +3,7 @@ name = "tshell"
 version = "0.1.0"
 authors = ["Teymur <teymur_baabyev08@yahoo.com>"]
 edition = "2021"
+build = "build.rs"
+
+[build-dependencies]
+embed-resource = "1.4"
