@@ -4,6 +4,8 @@ use std::env;
 use std::path::Path;
 use std::fs;
 
+
+
 fn list_dir(path: &str) {
     match fs::read_dir(path) {
         Ok(entries) => {
@@ -56,6 +58,7 @@ fn main() {
                     }
                     previous_command = None;
                 },
+           
                 "ls" => {
                     let path = args.get(0).unwrap_or(&".");
                     list_dir(path);
@@ -100,6 +103,18 @@ fn main() {
                 "write" => {
                     let message = args.join(" ");
                     println!("{}", message);
+                    previous_command = None;
+                },
+                "helpme" => {
+                    println!("Available commands:");
+                    println!("  cd <directory>     - Change the current directory");
+                    println!("  ls [directory]     - List contents of the current or specified directory");
+                    println!("  nwdir <directory>  - Create a new directory");
+                    println!("  imgod              - Run main.exe as administrator");
+                    println!("  white              - Clear the screen");
+                    println!("  write <message>    - Print a message to the console");
+                    println!("  help               - Display this help message");
+                    println!("  exit               - Exit the shell");
                     previous_command = None;
                 },
                 "exit" => return,
