@@ -5,7 +5,6 @@ use std::path::Path;
 use std::fs;
 
 
-
 fn list_dir(path: &str) {
     match fs::read_dir(path) {
         Ok(entries) => {
@@ -105,7 +104,7 @@ fn main() {
                     println!("{}", message);
                     previous_command = None;
                 },
-                "helpme" => {
+                "help" => {
                     println!("Available commands:");
                     println!("  cd <directory>     - Change the current directory");
                     println!("  ls [directory]     - List contents of the current or specified directory");
