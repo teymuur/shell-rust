@@ -1,9 +1,42 @@
-use std::io::{Write, stdin, stdout};
+use std::io::{self, Write, Read, Seek, SeekFrom,stdin,stdout};
 use std::process::{Command, Stdio, Child};
 use std::env;
 use std::path::Path;
 use std::fs;
+use std::fs::{File, OpenOptions};
 
+
+fn create_file(filename: &str) -> io::Result<()> {
+    File::create(filename)?;
+    println!("File '{}' created successfully.", filename);
+    Ok(())
+}
+
+fn edit_file(filename: &str) -> io::Result<()> {
+    let mut file = OpenOptions::new().read(true).write(true).create(true).open(filename)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    
+    println!("Current contents of '{}':", filename);
+    println!("{}", contents);
+    println!("Enter new contents (type 'EOF' on a new line to finish):");
+    
+    let mut new_contents = String::new();
+    loop {
+        let mut line = String::new();
+        io::stdin().read_line(&mut line)?;
+        if line.trim() == "EOF" {
+            break;
+        }
+        new_contents.push_str(&line);
+    }
+    
+    file.set_len(0)?;
+    file.seek(io::SeekFrom::Start(0))?;
+    file.write_all(new_contents.as_bytes())?;
+    println!("File '{}' updated successfully.", filename);
+    Ok(())
+}
 
 fn list_dir(path: &str) {
     match fs::read_dir(path) {
@@ -104,6 +137,28 @@ fn main() {
                     println!("{}", message);
                     previous_command = None;
                 },
+                "mkfile" => {
+                    if let Some(filename) = args.get(0) {
+                        match create_file(filename) {
+                            Ok(_) => (),
+                            Err(e) => eprintln!("Error creating file: {}", e),
+                        }
+                    } else {
+                        eprintln!("Usage: mkfile <filename>");
+                    }
+                    previous_command = None;
+                },
+                "edfile" => {
+                    if let Some(filename) = args.get(0) {
+                        match edit_file(filename) {
+                            Ok(_) => (),
+                            Err(e) => eprintln!("Error editing file: {}", e),
+                        }
+                    } else {
+                        eprintln!("Usage: edfile <filename>");
+                    }
+                    previous_command = None;
+                }
                 "help" => {
                     println!("Available commands:");
                     println!("  cd <directory>     - Change the current directory");
@@ -112,6 +167,9 @@ fn main() {
                     println!("  imgod              - Run main.exe as administrator");
                     println!("  white              - Clear the screen");
                     println!("  write <message>    - Print a message to the console");
+                    println!("  uwu <path>         - Run code from uwu file");
+                    println!("  mkfile <filename>  - Create a new file");
+                    println!("  edfile <filename>  - Edit an existing file or create a new one");
                     println!("  help               - Display this help message");
                     println!("  exit               - Exit the shell");
                     previous_command = None;

@@ -1,1 +1,3 @@
 write Hello World
+set a 4
+show a

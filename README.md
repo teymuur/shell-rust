@@ -36,6 +36,10 @@ Here are the available commands:
 - `imgod`: Execute the `main.exe` program as an administrator.
 - `white`: Clear the screen.
 - `write <message>`: Write the specified message to the console.
+- `uwu <path>`: Run uwu script from an uwu file.
+- `mkfile <filename>`  - Create a new file
+- `edfile <filename>`  - Edit an existing file or create a new one
+- `help`: Get a list of commands
 - `exit`: Exit the shell.
 
 You can also chain commands together using the `^_^` separator. For example:
@@ -46,3 +50,10 @@ ls ^_^ cd .. ^_^ ls
 
 This will list the contents of the current directory, change to the parent directory, and then list the contents of the parent directory.
 
+## uwu code
+Commands
+
+- write <string>: Outputs the specified string to the console.
+- set <variable> <value>: Sets the variable to the specified integer value.
+- add <variable> <value>: Adds the specified integer value to the variable.
+- show <variable>: Displays the current value of the variable
