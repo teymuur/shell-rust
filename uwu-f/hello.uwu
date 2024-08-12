@@ -1,0 +1,6 @@
+write("Hello World");
+a=5;
+b=2;
+c="4";
+read(d);
+write(a+b/toInt(c)*toInt(d));

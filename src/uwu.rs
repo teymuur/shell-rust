@@ -1,71 +1,103 @@
 use std::env;
-use std::fs::File;
-use std::io::{self, Read};
-use std::path::Path;
-
-fn read_file(filename: &str) -> io::Result<String> {
-    let path = Path::new(filename);
-    let mut file = File::open(&path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    Ok(contents)
-}
+use std::fs;
+use std::io::{self, Write};
 use std::collections::HashMap;
+use std::process;
 
-fn execute(script: &str) {
-    let mut variables: HashMap<String, i32> = HashMap::new();
+#[derive(Clone)]
+enum Value {
+    Int(i32),
+    String(String),
+}
 
-    for line in script.lines() {
-        let mut parts = line.split_whitespace();
-        if let Some(command) = parts.next() {
-            match command {
-                "write" => {
-                    if let Some(value) = parts.next() {
-                        print!("{}", value);
-                    }
-                },
-                "set" => {
-                    if let (Some(var_name), Some(value_str)) = (parts.next(), parts.next()) {
-                        if let Ok(value) = value_str.parse::<i32>() {
-                            variables.insert(var_name.to_string(), value);
-                        } else {
-                            eprintln!("Invalid value for 'set' command: {}", value_str);
-                        }
-                    }
-                },
-                "add" => {
-                    if let (Some(var_name), Some(value_str)) = (parts.next(), parts.next()) {
-                        if let Ok(value) = value_str.parse::<i32>() {
-                            *variables.entry(var_name.to_string()).or_insert(0) += value;
-                        } else {
-                            eprintln!("Invalid value for 'add' command: {}", value_str);
-                        }
-                    }
-                },
-                "show" => {
-                    if let Some(var_name) = parts.next() {
-                        match variables.get(var_name) {
-                            Some(value) => println!("{} = {}", var_name, value),
-                            None => println!("{} is not defined", var_name),
-                        }
-                    }
-                },
-                _ => eprintln!("Unknown command: {}", command),
+struct UwuInterpreter {
+    variables: HashMap<String, Value>,
+}
+
+impl UwuInterpreter {
+    fn new() -> Self {
+        UwuInterpreter {
+            variables: HashMap::new(),
+        }
+    }
+
+    fn read(&mut self, prompt: &str) -> Value {
+        print!("{}", prompt);
+        io::stdout().flush().unwrap();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        Value::String(input.trim().to_string())
+    }
+
+    fn write(&self, value: &Value) {
+        match value {
+            Value::Int(i) => println!("{}", i),
+            Value::String(s) => println!("{}", s),
+        }
+    }
+
+    fn to_int(&self, value: &Value) -> i32 {
+        match value {
+            Value::Int(i) => *i,
+            Value::String(s) => s.parse().unwrap_or(0),
+        }
+    }
+
+    fn evaluate(&self, expr: &str) -> Value {
+        if expr.starts_with('"') && expr.ends_with('"') {
+            Value::String(expr[1..expr.len()-1].to_string())
+        } else if let Ok(i) = expr.parse::<i32>() {
+            Value::Int(i)
+        } else if let Some(value) = self.variables.get(expr) {
+            value.clone()
+        } else {
+            Value::Int(0)
+        }
+    }
+
+    fn execute(&mut self, code: &str) {
+        for line in code.lines() {
+            let parts: Vec<&str> = line.split('=').collect();
+            if parts.len() == 1 {
+                // Function call
+                let mut parts = parts[0].split('(');
+                let func = parts.next().unwrap().trim();
+                let args = parts.next().unwrap_or("").trim_end_matches(')');
+                match func {
+                    "write" => self.write(&self.evaluate(args)),
+                    "read" => {
+                        let value = self.read("> ");
+                        self.variables.insert(args.to_string(), value);
+                    },
+                    _ => (),
+                }
+            } else {
+                // Variable assignment
+                let var = parts[0].trim();
+                let expr = parts[1].trim();
+                let value = self.evaluate(expr);
+                self.variables.insert(var.to_string(), value);
             }
         }
     }
 }
+
 fn main() {
     let args: Vec<String> = env::args().collect();
-    
-    if args.len() > 1 {
-        let path = &args[1];
-        println!("Running file: {}", path);
-        match read_file(path) {
-            Ok(contents) => execute(&contents),
-            Err(e) => eprintln!("Error reading file: {}", e),
-        }
-    } else {
-        println!("No path argument provided.");
+    if args.len() != 2 {
+        eprintln!("Usage: {} <file.uwu>", args[0]);
+        process::exit(1);
     }
+
+    let filename = &args[1];
+    let program = match fs::read_to_string(filename) {
+        Ok(content) => content,
+        Err(e) => {
+            eprintln!("Error reading file {}: {}", filename, e);
+            process::exit(1);
+        }
+    };
+
+    let mut interpreter = UwuInterpreter::new();
+    interpreter.execute(&program);
 }
