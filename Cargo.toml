@@ -7,3 +7,10 @@ build = "build.rs"
 
 [build-dependencies]
 embed-resource = "1.4"
+rustyline = "12.0.0"
+colored = "2.1.0"
+
+[dependencies]
+colored = "2.1.0"
+rustyline = "12.0.0"
+embed-resource = "1.4"
