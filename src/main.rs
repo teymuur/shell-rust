@@ -73,7 +73,7 @@ fn main() {
         stdin().read_line(&mut input).unwrap();
 
         // must be peekable so we know when we are on the last command
-        let mut commands = input.trim().split(" ^_^ ").peekable();
+        let mut commands = input.trim().split("||").peekable();
         let mut previous_command = None;
 
         while let Some(command) = commands.next() {
@@ -108,24 +108,14 @@ fn main() {
                     previous_command = None;
                 },
                 "imgod" => {
-                    let output = Command::new("runas")
-                        .arg("/user:Administrator")
-                        .arg("./main.exe")
-                        .output();
-
-                    match output {
-                        Ok(output) => {
-                            let stdout = String::from_utf8_lossy(&output.stdout);
-                            let stderr = String::from_utf8_lossy(&output.stderr);
-                            if !stdout.is_empty() {
-                                print!("{}", stdout);
-                            }
-                            if !stderr.is_empty() {
-                                eprintln!("{}", stderr);
-                            }
-                        },
-                        Err(e) => eprintln!("Failed to execute 'main.exe' as administrator: {}", e),
-                    }
+                    let output = Command::new("sudo")
+                    .arg("su")
+                    .spawn();
+            
+                match output {
+                    Ok(_) => print!("SUDO:"),
+                    Err(e) => eprintln!("Failed to run main as superuser: {}", e),
+                }
                     previous_command = None;
                 },
                 "white" => {
@@ -172,6 +162,7 @@ fn main() {
                     println!("  edfile <filename>  - Edit an existing file or create a new one");
                     println!("  help               - Display this help message");
                     println!("  exit               - Exit the shell");
+                    println!("Any other command available on your default terminal is usable");
                     previous_command = None;
                 },
                 "exit" => return,

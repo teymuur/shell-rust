@@ -4,7 +4,7 @@ use std::io::{self, Write};
 use std::collections::HashMap;
 use std::process;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Value {
     Int(i32),
     String(String),
@@ -44,6 +44,7 @@ impl UwuInterpreter {
     }
 
     fn evaluate(&self, expr: &str) -> Value {
+        println!("Evaluating: {}", expr); // Debug output
         if expr.starts_with('"') && expr.ends_with('"') {
             Value::String(expr[1..expr.len()-1].to_string())
         } else if let Ok(i) = expr.parse::<i32>() {
@@ -51,12 +52,30 @@ impl UwuInterpreter {
         } else if let Some(value) = self.variables.get(expr) {
             value.clone()
         } else {
-            Value::Int(0)
+            // Check if it's an arithmetic expression
+            let parts: Vec<&str> = expr.split(|c| c == '+' || c == '-' || c == '*' || c == '/').collect();
+            if parts.len() > 1 {
+                let mut result = self.to_int(&self.evaluate(parts[0].trim()));
+                for (i, part) in parts[1..].iter().enumerate() {
+                    let value = self.to_int(&self.evaluate(part.trim()));
+                    match expr.chars().nth(parts[0].len() + i) {
+                        Some('+') => result += value,
+                        Some('-') => result -= value,
+                        Some('*') => result *= value,
+                        Some('/') => result /= value,
+                        _ => {}
+                    }
+                }
+                Value::Int(result)
+            } else {
+                Value::Int(0)
+            }
         }
     }
 
     fn execute(&mut self, code: &str) {
         for line in code.lines() {
+            println!("Executing: {}", line); // Debug output
             let parts: Vec<&str> = line.split('=').collect();
             if parts.len() == 1 {
                 // Function call
@@ -78,6 +97,7 @@ impl UwuInterpreter {
                 let value = self.evaluate(expr);
                 self.variables.insert(var.to_string(), value);
             }
+            println!("Variables: {:?}", self.variables); // Debug output
         }
     }
 }

@@ -1,6 +1,6 @@
 # Rust Shell
 
-This Rust program provides a simple shell-like interface with basic command support. It supports changing directories, listing directory contents, creating new directories, executing commands as an administrator, clearing the screen, writing messages, and exiting the shell.
+This Rust program provides a simple shell-like interface with basic command support. It supports changing directories, listing directory contents, creating new directories, executing commands as superuser, clearing the screen, writing messages, and exiting the shell. Meant for linux systems mainly.
 
 ## Installation
 
@@ -42,10 +42,10 @@ Here are the available commands:
 - `help`: Get a list of commands
 - `exit`: Exit the shell.
 
-You can also chain commands together using the `^_^` separator. For example:
+You can also chain commands together using the `||` separator. For example:
 
 ```
-ls ^_^ cd .. ^_^ ls
+ls || cd .. || ls
 ```
 
 This will list the contents of the current directory, change to the parent directory, and then list the contents of the parent directory.
